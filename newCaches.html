@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<HTML>
+
+<!--
+New Caches
+
+0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
+
+Artur Miguel Dias, 2022
+-->
+
+
+<HEAD>	
+<TITLE>Linguagens e Ambientes de Programação (2021/2022) [Eng.Inf. - DI/FCT/UNL] - 3º projeto prático (Javascript)</TITLE>
+<META charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.8.0/dist/leaflet.css"
+   integrity="sha512-hoalWLoI8r4UszCkZ5kL8vayOGVae1oxXe/2A4AO6J9+580uKHDO3JdHb7NzwwzK5xr/Fs0W40kiNHxM9vyTtQ=="
+   crossorigin=""/>
+<script src="https://unpkg.com/leaflet@1.8.0/dist/leaflet.js"
+   integrity="sha512-BB3hKbKWOc9Ez/TAwyWxNXeoV9c1v6FIeYiBieIWkpLjauysF18NzgR1MBNBXf8/KABdlkX68nAhlwcDFLGPCQ=="
+   crossorigin=""></script>
+
+<SCRIPT TYPE="text/javascript" SRC="newCaches.js"></SCRIPT>
+<STYLE>
+html, body { font-size:12px; height: 100%;  width: 100%; padding: 0; margin: 0;}
+input { padding: 0; margin: 0;}
+</STYLE>
+</HEAD>
+
+<BODY ONLOAD="onLoad()">
+
+<DIV STYLE="position: fixed; top: 0px; left: 0px; height: 100%; width: 200px; background: pink">
+<H2>New Caches</H2>
+
+<hr><b>Autores:</b> <br />
+&nbsp;&nbsp;&nbsp;&nbsp;   60313 Francisco Freitas <br />
+&nbsp;&nbsp;&nbsp;&nbsp;   60288 Guilherme Figueira <br />
+
+<hr>
+<B>Kind:</B>
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Traditional.png" alt="Traditional"/>Traditional
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Multi.png" alt="Multi"/>Multicache
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Mystery.png" alt="Mystery"/>Mystery	
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Earthcache.png" alt="Earthcache"/>Earthcache		
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Event.png" alt="Event"/>Event	
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/CITO.png" alt="CITO"/>CITO	
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Mega.png" alt="Mega"/>Mega	
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Letterbox.png" alt="Letterbox"/>Letterbox	
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Virtual.png" alt="Virtual"/>Virtual	
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Webcam.png" alt="Webcam"/>Webcam	
+<BR />&nbsp;&nbsp;&nbsp;&nbsp;<img src="resources/Wherigo.png" alt="Wherigo"/>Wherigo	
+
+
+
+<HR><INPUT TYPE="button" ID="hello" VALUE="Olá olá!" ONCLICK="alert('Olá olá!')">
+<br />
+
+
+<HR><B>Statistics:</B>
+<BR />&nbsp;&nbsp;statistic1: <SPAN id='statistic1'>0</SPAN>
+
+<hr>
+</DIV>
+
+
+
+
+
+<div id="mapid" style="position: fixed; top: 0px; left: 200px; width: 100%; height: 100%;"></div>
+</BODY>
+
+</HTML>
+
