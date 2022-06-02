@@ -77,13 +77,13 @@ function openURL(url)
     window.open(url, "_blank");
 }
 
-function manageCoordsFunc(cache, lat, lon)
+function manageCoordsFunc(index, lat, lon)
 {
-	console.log($(cache).latitude);
-	$(cache).latitude = lat;
-	console.log($(cache).latitude);
-	//map.caches.find(cache => cache.code === code).latitude = lat;
-	//map.caches.find(cache => cache.code === code).longitude= lon;
+	map.caches[index].latitude = lat;
+	map.caches[index].longitude= lon;
+	map.caches[index].installMarker();	
+	if(kindIsPhysical(map.caches[index].kind))
+		map.caches[index].installCircle(CACHE_RADIUS, 'red');
 }
 
 
@@ -141,6 +141,10 @@ class POI {
 	}
 
 	installCircle(radius, color) {
+		if(this.cirle != null){
+			console.log("Removed circle");
+			map.remove(this.circle);
+		}
 		let pos = [this.latitude, this.longitude];
 		let style = {color: color, fillColor: color, weight: 1, fillOpacity: 0.1};
 		this.circle = L.circle(pos, radius, style);
@@ -150,8 +154,9 @@ class POI {
 }
 
 class Cache extends POI {
-	constructor(xml) {
+	constructor(xml, i) {
 		super(xml);
+		this.index = i;
 		this.installMarker();
 		if(kindIsPhysical(this.kind))
 			this.installCircle(CACHE_RADIUS, 'red');
@@ -181,6 +186,9 @@ class Cache extends POI {
 	}
 
 	installMarker() {
+		if(this.marker != null){
+			map.remove(this.marker);
+		}
 		let pos = [this.latitude, this.longitude];
 		this.marker = L.marker(pos, {icon: map.getIcon(this.kind)});
 		this.marker.bindTooltip(this.name);
@@ -196,7 +204,7 @@ class Cache extends POI {
 		<P>
 		Longitude <INPUT TYPE="number" ID="lon" VALUE="" SIZE=10 style="text-align: left">
 		<P>
-		<INPUT TYPE="button" ID="manageCoordsId" VALUE="Manage Coord" ONCLICK="console.log();">
+		<INPUT TYPE="button" ID="manageCoordsId" VALUE="Manage Coord" ONCLICK="manageCoordsFunc(${this.index}, lat.value, lon.value);">
 		</FORM>`);
 		map.add(this.marker);
 	}
@@ -299,12 +307,15 @@ class Map {
 		let xmlDoc = loadXMLDoc(filename);
 		let xs = getAllValuesByTagName(xmlDoc, "cache"); 
 		let caches = [];
+		let count = 0;
 		if(xs.length === 0)
 			alert("Empty cache file");
 		else {
 			for(let i = 0 ; i < xs.length ; i++)  // Ignore the disables caches
-				if( getFirstValueByTagName(xs[i], "status") === STATUS_ENABLED )
-					caches.push(new Cache(xs[i]));
+				if( getFirstValueByTagName(xs[i], "status") === STATUS_ENABLED ){
+					caches.push(new Cache(xs[i], count));
+					count = count + 1;
+				}
 		}
 		return caches;
 	}
