@@ -81,8 +81,8 @@ function cacheCoordsAreValid(lat, lon){
 	if(lat == "" || lon == "")
 		return false;
 	for(let i = 0 ; i < map.caches.length ; i++){
-		if(map.caches.status === STATUS_ENABLED){
-			let distance = haversine(map.caches[i].lat, map.caches[i].lon, lat, lon);
+		if(map.caches[i].status == STATUS_ENABLED){
+			let distance = haversine(map.caches[i].latitude, map.caches[i].longitude, lat, lon);
 			if(distance <= 0.161 || distance >= 0.4){
 				return false;
 			}
