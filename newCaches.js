@@ -53,6 +53,8 @@ const CACHES_FILE_NAME =
 	"caches.xml";
 const STATUS_ENABLED =
 	"E"
+const STATUS_DISABLED =
+	"A"
 
 
 /* GLOBAL VARIABLES */
@@ -79,10 +81,11 @@ function cacheCoordsAreValid(lat, lon){
 	if(lat == "" || lon == "")
 		return false;
 	for(let i = 0 ; i < map.caches.length ; i++){
-		let distance = haversine(map.caches[i].lat, map.caches[i].lon, lat, lon);
-		if(distance <= 0.161
-		|| distance >= 0.4){
-			return false;
+		if(map.caches.status === STATUS_ENABLED){
+			let distance = haversine(map.caches[i].lat, map.caches[i].lon, lat, lon);
+			if(distance <= 0.161 || distance >= 0.4){
+				return false;
+			}
 		}
 	}
 	return true;
@@ -109,7 +112,7 @@ function deleteCache(index){
 	|| cache.insertType == "manual")){
 		map.remove(cache.marker);
 		map.remove(cache.circle);
-		cache.state = "A";
+		cache.status = STATUS_DISABLED;
 	}
 	else{
 		alert("Cannot delete this cache.");
@@ -255,7 +258,7 @@ class Cache extends POI {
 		<P>
 		Longitude <INPUT TYPE="number" ID="lon" VALUE="" SIZE=10 style="text-align: left">
 		<P>
-		<INPUT TYPE="button" ID="manageCoordsId" VALUE="Manage Coord" ONCLICK="manageCoordsFunc(${this.index}, lat.value, lon.value);">
+		<INPUT TYPE="button" ID="manageCoordsId" VALUE="Change Coord" ONCLICK="manageCoordsFunc(${this.index}, lat.value, lon.value);">
 		<INPUT TYPE="button" ID="deleteCacheId" VALUE="Delete Cache" ONCLICK="deleteCache(${this.index});">
 		</FORM>`);
 		map.add(this.marker);
