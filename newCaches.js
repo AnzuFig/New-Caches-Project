@@ -59,8 +59,6 @@ const STATUS_ENABLED =
 
 let map = null;
 
-
-
 /* USEFUL FUNCTIONS */
 
 // Capitalize the first letter of a string.
@@ -77,13 +75,45 @@ function openURL(url)
     window.open(url, "_blank");
 }
 
+function cacheCoordsAreValid(lat, lon){
+	if(lat == "" || lon == "")
+		return false;
+	for(let i = 0 ; i < map.caches.length ; i++){
+		let distance = haversine(map.caches[i].lat, map.caches[i].lon, lat, lon);
+		if(distance <= 0.161
+		|| distance >= 0.4){
+			return false;
+		}
+	}
+	return true;
+}
+
 function manageCoordsFunc(index, lat, lon)
 {
-	map.caches[index].latitude = lat;
-	map.caches[index].longitude= lon;
-	map.caches[index].installMarker();	
-	if(kindIsPhysical(map.caches[index].kind))
-		map.caches[index].installCircle(CACHE_RADIUS, 'red');
+	if(cacheCoordsAreValid(lat, lon)){
+		let cache = map.caches[index];
+		cache.latitude = lat;
+		cache.longitude= lon;
+		cache.installMarker();	
+		if(kindIsPhysical(cache.kind))
+			cache.installCircle(CACHE_RADIUS, 'red');
+	}
+	else{
+		alert("Invalid Coordinates.");
+	}
+}
+
+function deleteCache(index){
+	let cache = map.caches[index];	
+	if(kindIsPhysical(cache.kind) && (cache.insertType == "automatic"
+	|| cache.insertType == "manual")){
+		map.remove(cache.marker);
+		map.remove(cache.circle);
+		cache.state = "A";
+	}
+	else{
+		alert("Cannot delete this cache.");
+	}	
 }
 
 
@@ -124,6 +154,16 @@ function kindIsPhysical(kind) {
 	return kind === "Traditional";
 }
 
+// Enumerator
+class insertTypeEnum{
+	static imported = new insertTypeEnum("imported");
+	static manual = new insertTypeEnum("manual");
+	static automatic = new insertTypeEnum("automatic");
+
+	constructor(name){
+		this.name = name;
+	}
+}
 
 /* POI CLASS + Cache CLASS */
 
@@ -141,7 +181,7 @@ class POI {
 	}
 
 	installCircle(radius, color) {
-		if(this.cirle != null){
+		if(this.circle != null){
 			console.log("Removed circle");
 			map.remove(this.circle);
 		}
@@ -154,12 +194,24 @@ class POI {
 }
 
 class Cache extends POI {
-	constructor(xml, i) {
+	constructor(xml, i, insertType) {
 		super(xml);
 		this.index = i;
+		this.insertType = insertType; 
 		this.installMarker();
-		if(kindIsPhysical(this.kind))
-			this.installCircle(CACHE_RADIUS, 'red');
+		switch(this.insertType){
+			case "imported":
+				this.installCircle(CACHE_RADIUS, 'red');
+				break;
+			case "manual":
+				this.installCircle(CACHE_RADIUS, 'green');
+				break;
+			case "automatic":
+				this.installCircle(CACHE_RADIUS, 'blue');
+				break;
+			default:
+				break;
+		}
 	}
 
 	decodeXML(xml) {
@@ -172,7 +224,6 @@ class Cache extends POI {
 		this.size = getFirstValueByTagName(xml, "size");
 		this.difficulty = getFirstValueByTagName(xml, "difficulty");
 		this.terrain = getFirstValueByTagName(xml, "terrain");
-
 
 		this.favorites = getFirstValueByTagName(xml, "favorites");
 		this.founds = getFirstValueByTagName(xml, "founds");
@@ -205,6 +256,7 @@ class Cache extends POI {
 		Longitude <INPUT TYPE="number" ID="lon" VALUE="" SIZE=10 style="text-align: left">
 		<P>
 		<INPUT TYPE="button" ID="manageCoordsId" VALUE="Manage Coord" ONCLICK="manageCoordsFunc(${this.index}, lat.value, lon.value);">
+		<INPUT TYPE="button" ID="deleteCacheId" VALUE="Delete Cache" ONCLICK="deleteCache(${this.index});">
 		</FORM>`);
 		map.add(this.marker);
 	}
@@ -313,7 +365,7 @@ class Map {
 		else {
 			for(let i = 0 ; i < xs.length ; i++)  // Ignore the disables caches
 				if( getFirstValueByTagName(xs[i], "status") === STATUS_ENABLED ){
-					caches.push(new Cache(xs[i], count));
+					caches.push(new Cache(xs[i], count, "imported"));			
 					count = count + 1;
 				}
 		}
