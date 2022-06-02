@@ -78,7 +78,6 @@ function openURL(url)
 }
 
 function cacheCoordsAreValid(lat, lon){
-	let isCloseToACache = false;
 	if(lat == "" || lon == "")
 		return false;
 	for(let i = 0 ; i < map.caches.length ; i++){
@@ -87,33 +86,45 @@ function cacheCoordsAreValid(lat, lon){
 			if(distance <= 0.161){
 				return false;
 			}
-			if(distance <= 0.4){
-				isCloseToACache = true;
-			}
 		}
 	}
-	return isCloseToACache;
+	return true;
 }
 
 function manageCoordsFunc(index, lat, lon)
 {
-	if(cacheCoordsAreValid(lat, lon)){
-		let cache = map.caches[index];
-		cache.latitude = lat;
-		cache.longitude= lon;
-		cache.installMarker();	
-		if(kindIsPhysical(cache.kind))
-			cache.installCircle(CACHE_RADIUS, 'red');
+	let cache = map.caches[index];
+	if((cache.insertType != "imported" || !kindIsPhysical(cache.kind))){
+		if(cacheCoordsAreValid(lat, lon)){
+			cache.latitude = lat;
+			cache.longitude= lon;
+			cache.installMarker();	
+			switch(cache.insertType){
+				case "manual":
+					cache.installCircle(CACHE_RADIUS, 'green');
+					break;
+				case "automatic":
+					cache.installCircle(CACHE_RADIUS, 'blue');
+					break;
+				case "imported":
+					cache.installCircle(CACHE_RADIUS, 'red');
+					break;
+				default:
+					break;
+			}
+		}
+		else{
+			alert("Invalid Coordinates.");
+		}
 	}
 	else{
-		alert("Invalid Coordinates.");
+		alert("Cannot move this cache.");
 	}
 }
 
 function deleteCache(index){
 	let cache = map.caches[index];	
-	if(kindIsPhysical(cache.kind) && (cache.insertType == "automatic"
-	|| cache.insertType == "manual")){
+	if(kindIsPhysical(cache.kind) && (cache.insertType != "imported")){
 		map.remove(cache.marker);
 		map.remove(cache.circle);
 		cache.status = STATUS_DISABLED;
@@ -159,17 +170,6 @@ function getFirstValueByTagName(xml, name)  {
 
 function kindIsPhysical(kind) {
 	return kind === "Traditional";
-}
-
-// Enumerator
-class insertTypeEnum{
-	static imported = new insertTypeEnum("imported");
-	static manual = new insertTypeEnum("manual");
-	static automatic = new insertTypeEnum("automatic");
-
-	constructor(name){
-		this.name = name;
-	}
 }
 
 /* POI CLASS + Cache CLASS */
