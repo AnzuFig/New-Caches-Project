@@ -78,17 +78,21 @@ function openURL(url)
 }
 
 function cacheCoordsAreValid(lat, lon){
+	let isCloseToACache = false;
 	if(lat == "" || lon == "")
 		return false;
 	for(let i = 0 ; i < map.caches.length ; i++){
 		if(map.caches[i].status == STATUS_ENABLED){
 			let distance = haversine(map.caches[i].latitude, map.caches[i].longitude, lat, lon);
-			if(distance <= 0.161 || distance >= 0.4){
+			if(distance <= 0.161){
 				return false;
+			}
+			if(distance <= 0.4){
+				isCloseToACache = true;
 			}
 		}
 	}
-	return true;
+	return isCloseToACache;
 }
 
 function manageCoordsFunc(index, lat, lon)
