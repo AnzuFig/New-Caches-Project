@@ -281,14 +281,53 @@ class Place extends POI {
 	}
 }
 
-/* Map CLASS */
+function getLatLngArray(latlng){
+	return latlng.slice(7, latlng.length - 1).split(","); 
+}
 
+function txt2xml(txt) {
+    let parser = new DOMParser();
+    return parser.parseFromString(txt,"text/xml");
+}
+
+function createCache(latlng){
+	let latlngArray = getLatLngArray(latlng);
+	let lat = latlngArray[0];
+	let lng = latlngArray[1];
+	let txt =
+          `<cache>
+            <code>UNKNOWN</code>
+            <name>UNKNOWN</name>
+            <owner>User</owner>
+            <latitude>${lat}</latitude>
+            <longitude>${lng}</longitude>
+            <altitude>-32768</altitude>
+            <kind>Traditional</kind>
+            <size>UNKNOWN</size>
+            <difficulty>1</difficulty>
+            <terrain>1</terrain>
+            <favorites>0</favorites>
+            <founds>0</founds>
+            <not_founds>0</not_founds>
+            <state>UNKNOWN</state>
+            <county>UNKNOWN</county>
+            <publish>2000/01/01</publish>
+            <status>E</status>
+            <last_log>2000/01/01</last_log>
+          </cache>`;
+    let cacheXML = txt2xml(txt);
+	map.caches.push(new Cache(cacheXML, map.cacheCount, "manual"));
+	map.cacheCount = map.cacheCount + 1;
+}
+
+/* Map CLASS */
 class Map {
 	constructor(center, zoom) {
 		this.lmap = L.map(MAP_ID).setView(center, zoom);
 		this.addBaseLayers(MAP_LAYERS);
 		this.icons = this.loadIcons(RESOURCES_DIR);
 		this.caches = [];
+		this.cacheCount = 0;
 		this.addClickHandler(e =>
 			L.popup()
 			.setLatLng(e.latlng)
@@ -296,7 +335,8 @@ class Map {
 			`<FORM>
 			<P>
 			<INPUT TYPE="button" ID="streetView" VALUE="Google Maps" 
-			ONCLICK="openURL('http://maps.google.com/maps?layer=c&cbll=${e.latlng.toString().slice(7, e.latlng.toString().length - 1).split(",")[0]}, ${e.latlng.toString().slice(7, e.latlng.toString().length - 1).split(",")[1]}');">
+			ONCLICK="openURL('http://maps.google.com/maps?layer=c&cbll=${getLatLngArray(e.latlng.toString())[0]}, ${getLatLngArray(e.latlng.toString())[1]}');">
+			<INPUT TYPE="button" ID="createCacheId" VALUE="Create Cache" ONCLICK="createCache('${e.latlng.toString()}');">
 			 </FORM>
 			`)
 		);
@@ -372,14 +412,13 @@ class Map {
 		let xmlDoc = loadXMLDoc(filename);
 		let xs = getAllValuesByTagName(xmlDoc, "cache"); 
 		let caches = [];
-		let count = 0;
 		if(xs.length === 0)
 			alert("Empty cache file");
 		else {
 			for(let i = 0 ; i < xs.length ; i++)  // Ignore the disables caches
 				if( getFirstValueByTagName(xs[i], "status") === STATUS_ENABLED ){
-					caches.push(new Cache(xs[i], count, "imported"));			
-					count = count + 1;
+					caches.push(new Cache(xs[i], this.cacheCount, "imported"));			
+					this.cacheCount = this.cacheCount + 1;
 				}
 		}
 		return caches;
