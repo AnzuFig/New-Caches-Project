@@ -127,7 +127,9 @@ function deleteCache(index){
 	if(kindIsPhysical(cache.kind) && (cache.insertType != "imported")){
 		map.remove(cache.marker);
 		map.remove(cache.circle);
-		cache.status = STATUS_DISABLED;
+		map.caches[index] = map.caches[map.caches.length];
+		map.caches[index].index = index;
+		map.push();
 	}
 	else{
 		alert("Cannot delete this cache.");
