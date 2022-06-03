@@ -292,7 +292,13 @@ class Map {
 		this.addClickHandler(e =>
 			L.popup()
 			.setLatLng(e.latlng)
-			.setContent("You clicked the map at " + e.latlng.toString())
+			.setContent("You clicked the map at " + e.latlng.toString() + 
+			`<FORM>
+			<P>
+			<INPUT TYPE="button" ID="streetView" VALUE="Google Maps" 
+			ONCLICK="openURL('http://maps.google.com/maps?layer=c&cbll=${e.latlng.toString().slice(7, e.latlng.toString().length - 1).split(",")[0]}, ${e.latlng.toString().slice(7, e.latlng.toString().length - 1).split(",")[1]}');">
+			 </FORM>
+			`)
 		);
 	}
 
