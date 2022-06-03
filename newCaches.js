@@ -60,6 +60,9 @@ const STATUS_DISABLED =
 /* GLOBAL VARIABLES */
 
 let map = null;
+let INVALID_COORDS = "Invalid Coordinates.";
+let CANT_MOVE_CACHE = "Cannot move this cache.";
+let CANT_DELETE_CACHE = "Cannot delete this cache."; 
 
 /* USEFUL FUNCTIONS */
 
@@ -114,11 +117,11 @@ function manageCoordsFunc(index, lat, lon)
 			}
 		}
 		else{
-			alert("Invalid Coordinates.");
+			alert(INVALID_COORDS);
 		}
 	}
 	else{
-		alert("Cannot move this cache.");
+		alert(CANT_MOVE_CACHE);
 	}
 }
 
@@ -129,10 +132,11 @@ function deleteCache(index){
 		map.remove(cache.circle);
 		map.caches[index] = map.caches[map.caches.length];
 		map.caches[index].index = index;
-		map.push();
+		map.pop();
+		map.cacheCount--;
 	}
 	else{
-		alert("Cannot delete this cache.");
+		alert(CANT_DELETE_CACHE);
 	}	
 }
 
@@ -296,30 +300,35 @@ function createCache(latlng){
 	let latlngArray = getLatLngArray(latlng);
 	let lat = latlngArray[0];
 	let lng = latlngArray[1];
-	let txt =
-          `<cache>
-            <code>UNKNOWN</code>
-            <name>UNKNOWN</name>
-            <owner>User</owner>
-            <latitude>${lat}</latitude>
-            <longitude>${lng}</longitude>
-            <altitude>-32768</altitude>
-            <kind>Traditional</kind>
-            <size>UNKNOWN</size>
-            <difficulty>1</difficulty>
-            <terrain>1</terrain>
-            <favorites>0</favorites>
-            <founds>0</founds>
-            <not_founds>0</not_founds>
-            <state>UNKNOWN</state>
-            <county>UNKNOWN</county>
-            <publish>2000/01/01</publish>
-            <status>E</status>
-            <last_log>2000/01/01</last_log>
-          </cache>`;
-    let cacheXML = txt2xml(txt);
-	map.caches.push(new Cache(cacheXML, map.cacheCount, "manual"));
-	map.cacheCount = map.cacheCount + 1;
+	if(cacheCoordsAreValid(lat, lng)){
+		let txt =
+ 	         `<cache>
+ 	           <code>UNKNOWN</code>
+ 	           <name>UNKNOWN</name>
+ 	           <owner>User</owner>
+ 	           <latitude>${lat}</latitude>
+ 	           <longitude>${lng}</longitude>
+ 	           <altitude>-32768</altitude>
+ 	           <kind>Traditional</kind>
+ 	           <size>UNKNOWN</size>
+ 	           <difficulty>1</difficulty>
+ 	           <terrain>1</terrain>
+ 	           <favorites>0</favorites>
+ 	           <founds>0</founds>
+ 	           <not_founds>0</not_founds>
+ 	           <state>UNKNOWN</state>
+ 	           <county>UNKNOWN</county>
+ 	           <publish>2000/01/01</publish>
+ 	           <status>E</status>
+ 	           <last_log>2000/01/01</last_log>
+ 	         </cache>`;
+ 	   let cacheXML = txt2xml(txt);
+		map.caches.push(new Cache(cacheXML, map.cacheCount, "manual"));
+		map.cacheCount++;
+	}
+	else{
+		alert(INVALID_COORDS);
+	}
 }
 
 /* Map CLASS */
