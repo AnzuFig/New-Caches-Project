@@ -356,8 +356,37 @@ class Map {
 	}
 
 	computeStatistics(){
-		let nCachesText = document.getElementById('nCaches')
+		let nCachesText = document.getElementById('nCaches');
 		nCachesText.innerHTML = this.caches.length;
+		let prolificOwnerText = document.getElementById('prolOwner');
+		prolificOwnerText.innerHTML = this.getProlificOwner();
+	}
+
+	getProlificOwner() {
+		// let ownerMap = {};
+		// let maxOwner = this.caches[0].owner;
+		// let maxCount = 1;
+		// for(let i = 0; i < this.caches.length; i++){
+		// 	let owner = this.caches[i];
+		// 	if(ownerMap[owner] == null){
+		// 		ownerMap[owner] = 1;
+		// 	} 
+		// 	else{
+		// 		ownerMap[owner]++;
+		// 	}
+		// 	if(ownerMap[owner] > maxCount){
+		// 		maxOwner = owner;
+		// 		maxCount = ownerMap[owner];
+		// 	}
+		// }
+		// return maxOwner;
+		let ownerArray = [];
+		for(let i = 0; i < this.caches.length; i++){
+			ownerArray[i] = this.caches[i].owner;
+		}
+		return ownerArray.sort((o1,o2) => ownerArray.filter(a => a===o1).length -
+								ownerArray.filter(a => a===o2).length).pop();
+
 	}
 
 	populate() {
