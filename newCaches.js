@@ -328,7 +328,7 @@ function createManualCache(latlng){
  	   let cacheXML = txt2xml(txt);
 		map.caches.push(new Cache(cacheXML, map.caches.length, "manual"));
 		map.cacheCount++;
-		this.computeStatistics();
+		map.computeStatistics();
 	}
 	else{
 		alert(INVALID_COORDS);
@@ -357,13 +357,15 @@ class Map {
 		);    
 	}
 
-	createRandomCache(){
+	createValidCache(fill){
 		let centerLan;
 		let centerLng;
 		let newLat;
 		let newLng;
 		let angle = 0;
-		for(let i = 0; i < this.caches.length; i++){
+		let cachesLength = this.caches.length;
+		let numCachesAdded = 0;
+		for(let i = 0; i < cachesLength; i++){
 			centerLan = parseFloat(this.caches[i].latitude);
 			centerLng = parseFloat(this.caches[i].longitude);
 			for(let j = 0; j < 360; j++){
@@ -392,17 +394,22 @@ class Map {
 						<status>E</status>
 						<last_log>2000/01/01</last_log>
 					  </cache>`;
-						let cacheXML = txt2xml(txt);
-					this.caches.push(new Cache(cacheXML, map.caches.length, "automatic"));
-					this.cacheCount++;
-					console.log("Success. Created new cache using: " + this.caches[i].name);
-					return ;
-					// if(this.caches[i].name === "UNKNOWN")
-					// 	this.computeStatistics();
-					// 	return;
+					let cacheXML = txt2xml(txt);
+					this.caches.push(new Cache(cacheXML, this.caches.length, "automatic"));
+					console.log("Added cache from: " + this.caches[i].name);
+					if(!fill){
+						this.computeStatistics();
+						return 1;
+					}
+					else
+						numCachesAdded++;
+						
 				}
 			}
 		}
+		this.computeStatistics();
+		alert(numCachesAdded + " new caches were added.");
+		return numCachesAdded;
 	}
 
 	computeStatistics(){
@@ -515,7 +522,7 @@ class Map {
 				if( getFirstValueByTagName(xs[i], "status") === STATUS_ENABLED ){
 					newCache = new Cache(xs[i], this.cacheCount, "imported");
 					caches.push(newCache);			
-					this.cacheCount = this.cacheCount + 1;
+					this.cacheCount++; 
 				}
 		}
 		return caches;
