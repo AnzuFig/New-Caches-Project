@@ -56,7 +56,7 @@ const STATUS_ENABLED =
 const STATUS_DISABLED =
 	"A";
 const VALID_RADIUS =
-	0.00184854054053461321;
+	0.00181154054053411321;
 
 /* GLOBAL VARIABLES */
 
@@ -328,6 +328,7 @@ function createManualCache(latlng){
  	   let cacheXML = txt2xml(txt);
 		map.caches.push(new Cache(cacheXML, map.caches.length, "manual"));
 		map.cacheCount++;
+		this.computeStatistics();
 	}
 	else{
 		alert(INVALID_COORDS);
@@ -361,39 +362,45 @@ class Map {
 		let centerLng;
 		let newLat;
 		let newLng;
-		let radius = 0;
+		let angle = 0;
 		for(let i = 0; i < this.caches.length; i++){
 			centerLan = parseFloat(this.caches[i].latitude);
 			centerLng = parseFloat(this.caches[i].longitude);
-			newLat = centerLan + VALID_RADIUS*Math.cos(radius);
-			newLng = centerLng + VALID_RADIUS*Math.sin(radius);
-			if(cacheCoordsAreValid(newLat, newLng)){
-				let txt =
- 		         `<cache>
- 		           <code>UNKNOWN</code>
- 		           <name>UNKNOWN</name>
- 		           <owner>User</owner>
- 		           <latitude>${newLat}</latitude>
- 		           <longitude>${newLng}</longitude>
- 		           <altitude>-32768</altitude>
- 		           <kind>Traditional</kind>
- 		           <size>UNKNOWN</size>
- 		           <difficulty>1</difficulty>
- 		           <terrain>1</terrain>
- 		           <favorites>0</favorites>
- 		           <founds>0</founds>
- 		           <not_founds>0</not_founds>
- 		           <state>UNKNOWN</state>
- 		           <county>UNKNOWN</county>
- 		           <publish>2000/01/01</publish>
- 		           <status>E</status>
- 		           <last_log>2000/01/01</last_log>
- 		         </cache>`;
- 		   		let cacheXML = txt2xml(txt);
-				this.caches.push(new Cache(cacheXML, map.caches.length, "automatic"));
-				this.cacheCount++;
-				console.log("Success. Created new cache at: " + newLat + ", " + newLng);
-				return;
+			for(let j = 0; j < 360; j++){
+				angle = j;
+				newLat = centerLan + VALID_RADIUS*Math.cos(angle);
+				newLng = centerLng + VALID_RADIUS*Math.sin(angle);
+				if(cacheCoordsAreValid(newLat, newLng)){
+					let txt =
+					  `<cache>
+						<code>UNKNOWN</code>
+						<name>UNKNOWN</name>
+						<owner>User</owner>
+						<latitude>${newLat}</latitude>
+						<longitude>${newLng}</longitude>
+						<altitude>-32768</altitude>
+						<kind>Traditional</kind>
+						<size>UNKNOWN</size>
+						<difficulty>1</difficulty>
+						<terrain>1</terrain>
+						<favorites>0</favorites>
+						<founds>0</founds>
+						<not_founds>0</not_founds>
+						<state>UNKNOWN</state>
+						<county>UNKNOWN</county>
+						<publish>2000/01/01</publish>
+						<status>E</status>
+						<last_log>2000/01/01</last_log>
+					  </cache>`;
+						let cacheXML = txt2xml(txt);
+					this.caches.push(new Cache(cacheXML, map.caches.length, "automatic"));
+					this.cacheCount++;
+					console.log("Success. Created new cache using: " + this.caches[i].name);
+					return ;
+					// if(this.caches[i].name === "UNKNOWN")
+					// 	this.computeStatistics();
+					// 	return;
+				}
 			}
 		}
 	}
