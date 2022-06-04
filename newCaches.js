@@ -48,14 +48,15 @@ const CACHE_KINDS = ["CITO", "Earthcache", "Event",
 	"Letterbox", "Mega", "Multi", "Mystery", "Other",
 	"Traditional", "Virtual", "Webcam", "Wherigo"];
 const CACHE_RADIUS =
-	161	// meters
+	161;	// meters
 const CACHES_FILE_NAME =
 	"caches.xml";
 const STATUS_ENABLED =
-	"E"
+	"E";
 const STATUS_DISABLED =
-	"A"
-
+	"A";
+const VALID_RADIUS =
+	0.00184854054053461321;
 
 /* GLOBAL VARIABLES */
 
@@ -269,7 +270,7 @@ class Cache extends POI {
 		<P>
 		Longitude <INPUT TYPE="number" ID="lon" VALUE="" SIZE=10 style="text-align: left">
 		<P>
-		${this.index}
+		<!--${this.index}-->
 		<INPUT TYPE="button" ID="manageCoordsId" VALUE="Change Coord" ONCLICK="manageCoordsFunc(${this.index}, lat.value, lon.value);">
 		<INPUT TYPE="button" ID="deleteCacheId" VALUE="Delete Cache" ONCLICK="deleteCache(${this.index});">
 		</FORM>`);
@@ -298,7 +299,7 @@ function txt2xml(txt) {
     return parser.parseFromString(txt,"text/xml");
 }
 
-function createCache(latlng){
+function createManualCache(latlng){
 	let latlngArray = getLatLngArray(latlng);
 	let lat = latlngArray[0];
 	let lng = latlngArray[1];
@@ -349,10 +350,52 @@ class Map {
 			<P>
 			<INPUT TYPE="button" ID="streetView" VALUE="Google Maps" 
 			ONCLICK="openURL('http://maps.google.com/maps?layer=c&cbll=${getLatLngArray(e.latlng.toString())[0]}, ${getLatLngArray(e.latlng.toString())[1]}');">
-			<INPUT TYPE="button" ID="createCacheId" VALUE="Create Cache" ONCLICK="createCache('${e.latlng.toString()}');">
+			<INPUT TYPE="button" ID="createCacheId" VALUE="Create Cache" ONCLICK="createManualCache('${e.latlng.toString()}');">
 			 </FORM>
 			`)
 		);    
+	}
+
+	createRandomCache(){
+		let centerLan;
+		let centerLng;
+		let newLat;
+		let newLng;
+		let radius = 0;
+		for(let i = 0; i < this.caches.length; i++){
+			centerLan = parseFloat(this.caches[i].latitude);
+			centerLng = parseFloat(this.caches[i].longitude);
+			newLat = centerLan + VALID_RADIUS*Math.cos(radius);
+			newLng = centerLng + VALID_RADIUS*Math.sin(radius);
+			if(cacheCoordsAreValid(newLat, newLng)){
+				let txt =
+ 		         `<cache>
+ 		           <code>UNKNOWN</code>
+ 		           <name>UNKNOWN</name>
+ 		           <owner>User</owner>
+ 		           <latitude>${newLat}</latitude>
+ 		           <longitude>${newLng}</longitude>
+ 		           <altitude>-32768</altitude>
+ 		           <kind>Traditional</kind>
+ 		           <size>UNKNOWN</size>
+ 		           <difficulty>1</difficulty>
+ 		           <terrain>1</terrain>
+ 		           <favorites>0</favorites>
+ 		           <founds>0</founds>
+ 		           <not_founds>0</not_founds>
+ 		           <state>UNKNOWN</state>
+ 		           <county>UNKNOWN</county>
+ 		           <publish>2000/01/01</publish>
+ 		           <status>E</status>
+ 		           <last_log>2000/01/01</last_log>
+ 		         </cache>`;
+ 		   		let cacheXML = txt2xml(txt);
+				this.caches.push(new Cache(cacheXML, map.caches.length, "automatic"));
+				this.cacheCount++;
+				console.log("Success. Created new cache at: " + newLat + ", " + newLng);
+				return;
+			}
+		}
 	}
 
 	computeStatistics(){
@@ -360,33 +403,31 @@ class Map {
 		nCachesText.innerHTML = this.caches.length;
 		let prolificOwnerText = document.getElementById('prolOwner');
 		prolificOwnerText.innerHTML = this.getProlificOwner();
+		let highALtitudeCacheText = document.getElementById('highestAltitudeCache');
+		let altitudeText = document.getElementById('altitude');
+		let nameAndAltitude = this.getHighestCache();
+		highALtitudeCacheText.innerHTML = nameAndAltitude[1];
+		altitudeText.innerHTML = nameAndAltitude[0];
 	}
 
 	getProlificOwner() {
-		// let ownerMap = {};
-		// let maxOwner = this.caches[0].owner;
-		// let maxCount = 1;
-		// for(let i = 0; i < this.caches.length; i++){
-		// 	let owner = this.caches[i];
-		// 	if(ownerMap[owner] == null){
-		// 		ownerMap[owner] = 1;
-		// 	} 
-		// 	else{
-		// 		ownerMap[owner]++;
-		// 	}
-		// 	if(ownerMap[owner] > maxCount){
-		// 		maxOwner = owner;
-		// 		maxCount = ownerMap[owner];
-		// 	}
-		// }
-		// return maxOwner;
 		let ownerArray = [];
 		for(let i = 0; i < this.caches.length; i++){
 			ownerArray[i] = this.caches[i].owner;
 		}
 		return ownerArray.sort((o1,o2) => ownerArray.filter(a => a===o1).length -
 								ownerArray.filter(a => a===o2).length).pop();
+	}
 
+	getHighestCache(){
+		let altitudeArray = [];
+		for(let i = 0; i < this.caches.length; i++){
+			altitudeArray.push(this.caches[i].altitude);
+		}
+		let highestAltitude = altitudeArray.sort((a,b) => a - b).pop();
+		let nameAndAltitude = [highestAltitude];
+		nameAndAltitude.push(this.caches.find(x => x.altitude === highestAltitude).name);
+		return nameAndAltitude;
 	}
 
 	populate() {
