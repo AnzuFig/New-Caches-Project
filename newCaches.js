@@ -120,7 +120,7 @@ function manageCoordsFunc(index, lat, lon)
 				case MANUAL:
 					cache.installCircle(CACHE_RADIUS, 'green');
 					break;
-				case "automatic":
+				case AUTOMATIC:
 					cache.installCircle(CACHE_RADIUS, 'blue');
 					break;
 				case IMPORTED:
@@ -233,7 +233,7 @@ class Cache extends POI {
 			case MANUAL:
 				this.installCircle(CACHE_RADIUS, 'green');
 				break;
-			case "automatic":
+			case AUTOMATIC:
 				this.installCircle(CACHE_RADIUS, 'blue');
 				break;
 			default:
@@ -407,7 +407,7 @@ class Map {
 							<last_log>2000/01/01</last_log>
 						  </cache>`;
 						let cacheXML = txt2xml(txt);
-						map.caches.push(new Cache(cacheXML, map.caches.length, "automatic"));
+						map.caches.push(new Cache(cacheXML, map.caches.length, AUTOMATIC));
 						await sleep(1);
 						if(!fill){
 							map.computeStatistics();
