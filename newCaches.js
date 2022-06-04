@@ -5,12 +5,9 @@ Aluno 2: 60288 Guilherme Figueira
 
 Comment:
 
-The file "newCaches.js" must include, in the first lines,
-an opening comment containing: the name and number of the two students who
-developd the project; indication of which parts of the work
-made and which were not made; possibly alerts to some aspects of the
-implementation that may be less obvious to the teacher.
-
+For the 6th requirement, we decided it was best to "iterate" through every existing cache and 
+use a polar coordinate system to calculate and test (check it's validity) every possible cache
+insertion around each. The angle interval we decided to use for each test was 0.5 degrees.
 
 
 0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
@@ -18,7 +15,6 @@ implementation that may be less obvious to the teacher.
 HTML DOM documentation: https://www.w3schools.com/js/js_htmldom.asp
 Leaflet documentation: https://leafletjs.com/reference.html
 */
-
 
 
 /* GLOBAL CONSTANTS */
@@ -49,6 +45,8 @@ const CACHE_KINDS = ["CITO", "Earthcache", "Event",
 	"Traditional", "Virtual", "Webcam", "Wherigo"];
 const CACHE_RADIUS =
 	161;	// meters
+const ANGLE =
+	0.5;
 const CACHES_FILE_NAME =
 	"caches.xml";
 const STATUS_ENABLED =
@@ -57,6 +55,12 @@ const STATUS_DISABLED =
 	"A";
 const VALID_RADIUS =
 	0.00181154054053411321;
+const IMPORTED =
+	"imported";
+const MANUAL =
+	"manual";
+const AUTOMATIC =
+	"automatic";
 
 /* GLOBAL VARIABLES */
 
@@ -81,7 +85,12 @@ function openURL(url)
     window.open(url, "_blank");
 }
 
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 function cacheCoordsAreValid(lat, lon){
+	let foundCloseImported = false;
 	if(lat == "" || lon == "")
 		return false;
 	for(let i = 0 ; i < map.caches.length ; i++){
@@ -90,27 +99,31 @@ function cacheCoordsAreValid(lat, lon){
 			if(distance <= 0.161){
 				return false;
 			}
+			if(map.caches[i].insertType == IMPORTED && kindIsPhysical(map.caches[i].kind) 
+			&& distance < 0.4){
+				foundCloseImported = true;
+			}
 		}
 	}
-	return true;
+	return foundCloseImported;
 }
 
 function manageCoordsFunc(index, lat, lon)
 {
 	let cache = map.caches[index];
-	if((cache.insertType != "imported" || !kindIsPhysical(cache.kind))){
+	if((cache.insertType != IMPORTED || !kindIsPhysical(cache.kind))){
 		if(cacheCoordsAreValid(lat, lon)){
 			cache.latitude = lat;
 			cache.longitude= lon;
 			cache.installMarker();	
 			switch(cache.insertType){
-				case "manual":
+				case MANUAL:
 					cache.installCircle(CACHE_RADIUS, 'green');
 					break;
 				case "automatic":
 					cache.installCircle(CACHE_RADIUS, 'blue');
 					break;
-				case "imported":
+				case IMPORTED:
 					cache.installCircle(CACHE_RADIUS, 'red');
 					break;
 				default:
@@ -128,7 +141,7 @@ function manageCoordsFunc(index, lat, lon)
 
 function deleteCache(index){
 	let cache = map.caches[index];	
-	if(kindIsPhysical(cache.kind) && (cache.insertType != "imported")){
+	if(kindIsPhysical(cache.kind) && (cache.insertType != IMPORTED)){
 		map.remove(cache.marker);
 		map.remove(cache.circle);
 		map.caches[map.caches.length - 1].index = map.caches[index].index;
@@ -197,7 +210,6 @@ class POI {
 
 	installCircle(radius, color) {
 		if(this.circle != null){
-			console.log("Removed circle");
 			map.remove(this.circle);
 		}
 		let pos = [this.latitude, this.longitude];
@@ -215,10 +227,10 @@ class Cache extends POI {
 		this.insertType = insertType; 
 		this.installMarker();
 		switch(this.insertType){
-			case "imported":
+			case IMPORTED:
 				this.installCircle(CACHE_RADIUS, 'red');
 				break;
-			case "manual":
+			case MANUAL:
 				this.installCircle(CACHE_RADIUS, 'green');
 				break;
 			case "automatic":
@@ -270,7 +282,6 @@ class Cache extends POI {
 		<P>
 		Longitude <INPUT TYPE="number" ID="lon" VALUE="" SIZE=10 style="text-align: left">
 		<P>
-		<!--${this.index}-->
 		<INPUT TYPE="button" ID="manageCoordsId" VALUE="Change Coord" ONCLICK="manageCoordsFunc(${this.index}, lat.value, lon.value);">
 		<INPUT TYPE="button" ID="deleteCacheId" VALUE="Delete Cache" ONCLICK="deleteCache(${this.index});">
 		</FORM>`);
@@ -326,7 +337,7 @@ function createManualCache(latlng){
  	           <last_log>2000/01/01</last_log>
  	         </cache>`;
  	   let cacheXML = txt2xml(txt);
-		map.caches.push(new Cache(cacheXML, map.caches.length, "manual"));
+		map.caches.push(new Cache(cacheXML, map.caches.length, MANUAL));
 		map.cacheCount++;
 		map.computeStatistics();
 	}
@@ -358,58 +369,62 @@ class Map {
 	}
 
 	createValidCache(fill){
-		let centerLan;
-		let centerLng;
-		let newLat;
-		let newLng;
-		let angle = 0;
-		let cachesLength = this.caches.length;
-		let numCachesAdded = 0;
-		for(let i = 0; i < cachesLength; i++){
-			centerLan = parseFloat(this.caches[i].latitude);
-			centerLng = parseFloat(this.caches[i].longitude);
-			for(let j = 0; j < 360; j++){
-				angle = j;
-				newLat = centerLan + VALID_RADIUS*Math.cos(angle);
-				newLng = centerLng + VALID_RADIUS*Math.sin(angle);
-				if(cacheCoordsAreValid(newLat, newLng)){
-					let txt =
-					  `<cache>
-						<code>UNKNOWN</code>
-						<name>UNKNOWN</name>
-						<owner>User</owner>
-						<latitude>${newLat}</latitude>
-						<longitude>${newLng}</longitude>
-						<altitude>-32768</altitude>
-						<kind>Traditional</kind>
-						<size>UNKNOWN</size>
-						<difficulty>1</difficulty>
-						<terrain>1</terrain>
-						<favorites>0</favorites>
-						<founds>0</founds>
-						<not_founds>0</not_founds>
-						<state>UNKNOWN</state>
-						<county>UNKNOWN</county>
-						<publish>2000/01/01</publish>
-						<status>E</status>
-						<last_log>2000/01/01</last_log>
-					  </cache>`;
-					let cacheXML = txt2xml(txt);
-					this.caches.push(new Cache(cacheXML, this.caches.length, "automatic"));
-					console.log("Added cache from: " + this.caches[i].name);
-					if(!fill){
-						this.computeStatistics();
-						return 1;
-					}
-					else
-						numCachesAdded++;
+		async function animation(){
+			let centerLan;
+			let centerLng;
+			let newLat;
+			let newLng;
+			let angle = 0;
+			let numCachesAdded = 0;
+			let cachesLength = map.caches.length;
+			for(let i = 0; i < cachesLength; i++){
+				centerLan = parseFloat(map.caches[i].latitude);
+				centerLng = parseFloat(map.caches[i].longitude);
+				for(let j = 0; j < 360/ANGLE; j++){
+					angle = j*ANGLE;
+					newLat = centerLan + VALID_RADIUS*Math.cos(angle);
+					newLng = centerLng + VALID_RADIUS*Math.sin(angle);
+					if(cacheCoordsAreValid(newLat, newLng)){
+						let txt =
+						  `<cache>
+							<code>UNKNOWN</code>
+							<name>UNKNOWN</name>
+							<owner>User</owner>
+							<latitude>${newLat}</latitude>
+							<longitude>${newLng}</longitude>
+							<altitude>-32768</altitude>
+							<kind>Traditional</kind>
+							<size>UNKNOWN</size>
+							<difficulty>1</difficulty>
+							<terrain>1</terrain>
+							<favorites>0</favorites>
+							<founds>0</founds>
+							<not_founds>0</not_founds>
+							<state>UNKNOWN</state>
+							<county>UNKNOWN</county>
+							<publish>2000/01/01</publish>
+							<status>E</status>
+							<last_log>2000/01/01</last_log>
+						  </cache>`;
+						let cacheXML = txt2xml(txt);
+						map.caches.push(new Cache(cacheXML, map.caches.length, "automatic"));
+						await sleep(1);
+						if(!fill){
+							map.computeStatistics();
+							return 1;
+						}
+						else{
+							numCachesAdded++;
+						}
 						
+					}
 				}
 			}
+			map.computeStatistics();
+			alert(numCachesAdded + " new caches were added.");
+			return numCachesAdded;
 		}
-		this.computeStatistics();
-		alert(numCachesAdded + " new caches were added.");
-		return numCachesAdded;
+		return animation();
 	}
 
 	computeStatistics(){
@@ -520,7 +535,7 @@ class Map {
 		else {
 			for(let i = 0 ; i < xs.length ; i++)  // Ignore the disables caches
 				if( getFirstValueByTagName(xs[i], "status") === STATUS_ENABLED ){
-					newCache = new Cache(xs[i], this.cacheCount, "imported");
+					newCache = new Cache(xs[i], this.cacheCount, IMPORTED);
 					caches.push(newCache);			
 					this.cacheCount++; 
 				}
