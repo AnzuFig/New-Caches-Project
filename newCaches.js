@@ -130,9 +130,10 @@ function deleteCache(index){
 	if(kindIsPhysical(cache.kind) && (cache.insertType != "imported")){
 		map.remove(cache.marker);
 		map.remove(cache.circle);
-		map.caches[index] = map.caches[map.caches.length];
-		map.caches[index].index = index;
-		map.pop();
+		map.caches[map.caches.length - 1].index = map.caches[index].index;
+		map.caches[index] = map.caches[map.caches.length - 1];
+		map.caches.pop();
+		map.caches[index].installMarker();
 		map.cacheCount--;
 	}
 	else{
@@ -268,6 +269,7 @@ class Cache extends POI {
 		<P>
 		Longitude <INPUT TYPE="number" ID="lon" VALUE="" SIZE=10 style="text-align: left">
 		<P>
+		${this.index}
 		<INPUT TYPE="button" ID="manageCoordsId" VALUE="Change Coord" ONCLICK="manageCoordsFunc(${this.index}, lat.value, lon.value);">
 		<INPUT TYPE="button" ID="deleteCacheId" VALUE="Delete Cache" ONCLICK="deleteCache(${this.index});">
 		</FORM>`);
@@ -323,7 +325,7 @@ function createCache(latlng){
  	           <last_log>2000/01/01</last_log>
  	         </cache>`;
  	   let cacheXML = txt2xml(txt);
-		map.caches.push(new Cache(cacheXML, map.cacheCount, "manual"));
+		map.caches.push(new Cache(cacheXML, map.caches.length, "manual"));
 		map.cacheCount++;
 	}
 	else{
@@ -350,7 +352,12 @@ class Map {
 			<INPUT TYPE="button" ID="createCacheId" VALUE="Create Cache" ONCLICK="createCache('${e.latlng.toString()}');">
 			 </FORM>
 			`)
-		);
+		);    
+	}
+
+	computeStatistics(){
+		let nCachesText = document.getElementById('nCaches')
+		nCachesText.innerHTML = this.caches.length;
 	}
 
 	populate() {
@@ -367,7 +374,7 @@ class Map {
 
 	getCaches() {
 		return this.caches;
-	}
+	} 
 
 	makeMapLayer(name, spec) {
 		let urlTemplate = MAP_URL;
@@ -423,12 +430,14 @@ class Map {
 		let xmlDoc = loadXMLDoc(filename);
 		let xs = getAllValuesByTagName(xmlDoc, "cache"); 
 		let caches = [];
+		let newCache;
 		if(xs.length === 0)
 			alert("Empty cache file");
 		else {
 			for(let i = 0 ; i < xs.length ; i++)  // Ignore the disables caches
 				if( getFirstValueByTagName(xs[i], "status") === STATUS_ENABLED ){
-					caches.push(new Cache(xs[i], this.cacheCount, "imported"));			
+					newCache = new Cache(xs[i], this.cacheCount, "imported");
+					caches.push(newCache);			
 					this.cacheCount = this.cacheCount + 1;
 				}
 		}
@@ -463,6 +472,7 @@ function onLoad()
 	map = new Map(MAP_INITIAL_CENTRE, MAP_INITIAL_ZOOM);
 	map.showFCT();
 	map.populate();
+	map.computeStatistics();
 }
 
 
